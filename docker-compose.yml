@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.7
+    container_name: keycloak
+    restart: unless-stopped
+    command: start-dev
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      KC_HOSTNAME_URL: ${KC_HOSTNAME_URL}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD}
+    networks:
+      - control-plane
+
+  app:
+    build: ./app
+    container_name: web-app
+    privileged: true
+    volumes:
+      - app_ts_data:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    networks:
+      - app-net
+      - control-plane
+
+  db:
+    build: ./db
+    container_name: server-db
+    privileged: true 
+    volumes:
+      - db_ts_data:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    networks:
+      - db-net
+      - control-plane
+
+networks:
+  control-plane:
+  app-net:
+  db-net:
+
+
+volumes:
+  app_ts_data:
+  db_ts_data:
